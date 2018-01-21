@@ -45,8 +45,8 @@ if (!argv.exchange2) throw new Error('missing --exchange2');
 
 const exchange1 = new Exchange(argv.exchange1);
 const exchange2 = new Exchange(argv.exchange2);
-const initialCoin = argv.initialCoin || 'usd';
-const bridgingCoin = argv.bridgingCoin || 'usd';
+const initialCoin = (argv.initialCoin || 'usd').toLowerCase();
+const bridgingCoin = (argv.bridgingCoin || 'usd').toLowerCase();
 
 allCombinations({
   exchange1,
