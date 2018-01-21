@@ -1,7 +1,8 @@
 # crypto-arbitrage
 
+![Demo](demo.png)
 
-This repo is to figure out if one can profit by doing following steps:
+### This repo is to figure out if one can profit by doing following steps:
 1. Convert **10,000 USD** to **Coin X** in *Exchange 1*.
 2. Transfer **Coin X** to *Exchange 2*.
 3. Convert **Coin X** to **Coin Y** in *Exchange 2*.
