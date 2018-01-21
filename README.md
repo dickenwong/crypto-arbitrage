@@ -16,7 +16,7 @@
 node main.js \
     --exchange1=<Exchange1> \
     --exchange2=<Exchange2> \
-    --initialCoin=usd\
+    --initialCoin=usd \
     --bridgingCoin=usd
 
 # Currently supported exchanges:
