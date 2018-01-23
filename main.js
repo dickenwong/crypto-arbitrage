@@ -12,6 +12,9 @@ async function allCombinations({
   bridgingCoin = 'usd',
   initialAmount = 10000,
 }) {
+  console.log('Date: ', (new Date()).toISOString());
+  console.log(`Principal: ${initialCoin.toUpperCase()} ${initialAmount}`);
+
   await Promise.all([
     exchange1.fetchTickers({ base: initialCoin }),
     exchange2.fetchTickers({ base: bridgingCoin }),
@@ -40,17 +43,22 @@ async function allCombinations({
 }
 
 
-if (!argv.exchange1) throw new Error('missing --exchange1');
-if (!argv.exchange2) throw new Error('missing --exchange2');
+if (require.main === module) {
+  if (!argv.exchange1) throw new Error('missing --exchange1');
+  if (!argv.exchange2) throw new Error('missing --exchange2');
 
-const exchange1 = new Exchange(argv.exchange1);
-const exchange2 = new Exchange(argv.exchange2);
-const initialCoin = (argv.initialCoin || 'usd').toLowerCase();
-const bridgingCoin = (argv.bridgingCoin || 'usd').toLowerCase();
+  const exchange1 = new Exchange(argv.exchange1);
+  const exchange2 = new Exchange(argv.exchange2);
+  const initialCoin = (argv.initialCoin || 'usd').toLowerCase();
+  const bridgingCoin = (argv.bridgingCoin || 'usd').toLowerCase();
 
-allCombinations({
-  exchange1,
-  exchange2,
-  initialCoin,
-  bridgingCoin,
-}).catch(console.error);
+  allCombinations({
+    exchange1,
+    exchange2,
+    initialCoin,
+    bridgingCoin,
+    initialAmount: argv.initialAmount || 1000,
+  }).catch(console.error);
+}
+
+module.exports = { allCombinations };

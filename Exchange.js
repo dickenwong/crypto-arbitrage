@@ -1,10 +1,20 @@
+/**
+ * TODO:
+ * - use trading and funding fee from ccxt?
+ */
+
 const ccxt = require('ccxt');
 const ExtendableError = require('es6-error');
 const Asset = require('./Asset');
 const exchangeData = require('./exchange-data');
 
+const debug = (...args) => {
+  if (process.env.DEBUG) console.log(...args);
+};
+
 
 class InvalidPair extends ExtendableError {}
+class NotEnoughDepth extends ExtendableError {}
 
 
 class Exchange {
@@ -31,26 +41,80 @@ class Exchange {
      */
   }
 
-  convert({ fromAsset, toCoin, bridgingCoin }) {
-    /**
-     * TODO:
-     * - Handle slippage
-     */
-    const fromCoin = fromAsset.coin;
-    if (fromCoin === toCoin) {
-      return fromAsset;
+  _getAvailableToAssetAmount({
+    pair,
+    pairName,
+    direction,
+    fromAssetAmountLeft,
+    toAssetAmountCumulated = 0,
+    bookDepth = 0,
+  }) {
+    const record = direction === 'buy'
+      ? pair.asks[bookDepth]
+      : pair.bids[bookDepth];
+    if (!record) {
+      throw new NotEnoughDepth(
+        `${this.slugname} ${pairName} has no depth ${bookDepth}.`
+      );
     }
+    const rate = direction === 'buy' ? record[0] : (1 / record[0]);
+    const size = direction === 'buy' ? record[1] : record[1] / rate;
+    const maxCanBuyAmount = fromAssetAmountLeft / rate;
+    debug(
+      `[Depth ${bookDepth}]\t` +
+      `Rate=${rate}\t` +
+      `Size=${size}\t` +
+      `MaxAmount=${maxCanBuyAmount}\t` +
+      `MoneyLeft=${fromAssetAmountLeft}\t` +
+      `AmountStacked=${toAssetAmountCumulated}\t`
+    );
+    if (maxCanBuyAmount <= size) {
+      toAssetAmountCumulated += maxCanBuyAmount;
+      return toAssetAmountCumulated;
+    }
+    return this._getAvailableToAssetAmount({
+      pair,
+      pairName,
+      direction,
+      fromAssetAmountLeft: fromAssetAmountLeft - size * rate,
+      toAssetAmountCumulated: toAssetAmountCumulated + size,
+      bookDepth: bookDepth + 1,
+    });
+  }
+
+  findPair({ fromCoin, toCoin }) {
     let pairName = `${toCoin}/${fromCoin}`.toLowerCase();
     if (this.pairs[pairName]) {
-      const ask = this.pairs[pairName].asks[0][0];
-      const amount = fromAsset.amount / ask * (1 - this.takerFeePercent / 100);
-      return new Asset({ coin: toCoin, amount });
+      return { direction: 'buy', pairName, pair: this.pairs[pairName] };
     }
     pairName = `${fromCoin}/${toCoin}`.toLowerCase();
     if (this.pairs[pairName]) {
-      const bid = this.pairs[pairName].bids[0][0];
-      const amount = fromAsset.amount * bid * (1 - this.takerFeePercent / 100);
-      return new Asset({ coin: toCoin, amount });
+      return { direction: 'sell', pairName, pair: this.pairs[pairName] };
+    }
+    return {};
+  }
+
+  convert({ fromAsset, toCoin, bridgingCoin }) {
+    if (fromAsset.coin === toCoin) {
+      return fromAsset;
+    }
+    const { pair, pairName, direction } = this.findPair({
+      fromCoin: fromAsset.coin,
+      toCoin,
+    });
+    if (pair && direction) {
+      debug(`===> Found a pair ${pairName} to ${direction}`);
+      const amount = this._getAvailableToAssetAmount({
+        pair,
+        pairName,
+        direction,
+        fromAssetAmountLeft: fromAsset.amount,
+      });
+      debug(`===> Final: ${amount} ${toCoin}`);
+      return new Asset({
+        coin: toCoin,
+        amount: amount * (1 - this.takerFeePercent / 100),
+      });
     }
     if (bridgingCoin &&
         fromAsset.coin !== bridgingCoin &&
@@ -90,15 +154,15 @@ class Exchange {
     const symbols = this.availableCoins
       .filter(coin => coin !== base)
       .map(coin => `${coin}/${base}`.toUpperCase());
-    const pairs = await Promise
-      .all(symbols.map(symbol => exchange.fetchTicker(symbol.toUpperCase())));
-    pairs.forEach((pair) => {
-      const { symbol, ask, bid } = pair;
+
+    const promises = symbols.map(async (symbol) => {
+      const book = await exchange.fetchOrderBook(symbol.toUpperCase());
       this.pairs[symbol.toLowerCase()] = {
-        bids: [[+bid, Infinity]],
-        asks: [[+ask, Infinity]],
+        bids: book.bids,
+        asks: book.asks,
       };
     });
+    await Promise.all(promises);
   }
 }
 
