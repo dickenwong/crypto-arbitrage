@@ -1,8 +1,8 @@
 const { argv } = require('yargs');
 const chalk = require('chalk');
-const Asset = require('./Asset');
-const Exchange = require('./Exchange');
-const arbitrage = require('./arbitrage');
+const Asset = require('./lib/Asset');
+const Exchange = require('./lib/Exchange');
+const arbitrage = require('./lib/arbitrage');
 
 
 async function allCombinations({
