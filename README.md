@@ -9,8 +9,15 @@
 4. Transfer **Coin Y** to *Exchange 1*.
 5. Convert **Coin Y** back to **USD** in *Exchange 1*.
 
-**Notes**: Trading fees, funding fees and slippage are already considered in the calculation.
+**Notes: Trading fees, funding fees and slippage are already considered in the calculation.**
 
+---
+## Install:
+```sh
+git clone https://github.com/dickenwong/crypto-arbitrage.git
+cd crypto-arbitrage
+npm install
+```
 
 ---
 ## Command:
@@ -51,4 +58,12 @@ BTG <--> BTC  1.37%   # Earn 1.37%
 * Tickers are fetched by **cctx** (a great package for cryptocurrency data).
 * Transaction time is neglected in this calculation.
 * More profit can be achieved by lowering exchange trade fee (i.e. by a larger principal).
-* In fact, such arbitrage opportunity happen rarely. This repo somehow proves it makes no profit.
+
+---
+### TODO / Posible improvement:
+* [ ] Support more exchanges
+* [ ] Consider transaction time
+* [ ] (Test it in real life!)
+* [ ] Find optimal principal USD amount for highest return
+* [ ] Real-time monitor (websocket)
+* [ ] Handle trading here
