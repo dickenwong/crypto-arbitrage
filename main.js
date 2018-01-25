@@ -5,19 +5,20 @@ const Exchange = require('./lib/Exchange');
 const arbitrage = require('./lib/arbitrage');
 
 
-async function allCombinations({
+async function main({
   exchange1,
   exchange2,
   initialCoin = 'usd',
   bridgingCoin = 'usd',
   initialAmount = 10000,
 }) {
+  console.log(chalk.yellow(`${exchange1.slugname} <--> ${exchange2.slugname}`));
   console.log('Date: ', (new Date()).toISOString());
   console.log(`Principal: ${initialCoin.toUpperCase()} ${initialAmount}`);
 
   await Promise.all([
-    exchange1.fetchTickers({ base: initialCoin }),
-    exchange2.fetchTickers({ base: bridgingCoin }),
+    exchange1.fetchTickers({ base: initialCoin, _replace: false }),
+    exchange2.fetchTickers({ base: bridgingCoin, _replace: false }),
   ]);
 
   const coins = exchange1.availableCoins
@@ -52,7 +53,7 @@ if (require.main === module) {
   const initialCoin = (argv.initialCoin || 'usd').toLowerCase();
   const bridgingCoin = (argv.bridgingCoin || 'usd').toLowerCase();
 
-  allCombinations({
+  main({
     exchange1,
     exchange2,
     initialCoin,
@@ -61,4 +62,4 @@ if (require.main === module) {
   }).catch(console.error);
 }
 
-module.exports = { allCombinations };
+module.exports = { main };
