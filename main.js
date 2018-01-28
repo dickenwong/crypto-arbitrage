@@ -35,10 +35,15 @@ async function main({
         initialAsset,
         bridgingCoin,
       });
-      console.log(chalk[asset.amount - initialAmount > 0 ? 'green' : 'red'](
-        `${coin.toUpperCase()} <--> ${baseCoin.toUpperCase()} `,
-        `${((asset.amount / initialAmount - 1) * 100).toFixed(2)}%`,
-      ));
+      const profit = asset.amount - initialAmount;
+      const msg = (
+        `${coin.toUpperCase()} <--> ${baseCoin.toUpperCase()} ` +
+        `${(profit / initialAmount * 100).toFixed(2)}%`
+      );
+      console.log(chalk[profit > 0 ? 'green' : 'red'](msg));
+      if (profit > 0) {
+        console.log(asset.getTransactionLog());
+      }
     });
   });
 }
