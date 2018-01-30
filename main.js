@@ -41,9 +41,8 @@ async function main({
         `${(profit / initialAmount * 100).toFixed(2)}%`
       );
       console.log(chalk[profit > 0 ? 'green' : 'red'](msg));
-      if (profit > 0) {
-        console.log(asset.getTransactionLog());
-      }
+      console.log(asset.getTransactionLog());      
+      if (profit > 0) {}
     });
   });
 }
